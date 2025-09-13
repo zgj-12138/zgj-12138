@@ -1,0 +1,74 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,.05);
+    border: none;
+    margin-bottom: 20px;
+}
+
+.card-title {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border: none;
+    padding: 8px 20px;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+}
+
+.table th {
+    font-weight: 600;
+    color: #495057;
+}
+
+.btn-info {
+    background-color: #0dcaf0;
+    border: none;
+    color: white;
+}
+
+.btn-info:hover {
+    background-color: #0bacda;
+    color: white;
+}
+
+.text-muted {
+    font-size: 0.875rem;
+}
+
+/* 管理员界面特定样式 */
+.list-group-item.active {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.badge {
+    padding: 0.5em 0.75em;
+}
+
+/* 模态框样式 */
+.modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+} 

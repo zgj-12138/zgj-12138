@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据03班课堂作业上传系统</title>
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/styles.css" rel="stylesheet">
+    <script src="../js/vue.min.js"></script>
+    <script src="../js/axios.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="#">数据03班课堂作业上传系统</a>
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="login.html">管理员入口</a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container mt-4">
+            <!-- 作业列表视图 -->
+            <div v-if="!selectedHomework">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">当前可提交的作业</h5>
+                                <div class="alert alert-info">
+                                    <h6>提交要求：</h6>
+                                    <ul class="mb-0">
+                                        <li>请确保文件格式符合作业的要求</li>
+                                        <li>请再次确认文件名是否符合作业要求</li>
+                                        <li>请在作业说明中注明任何特殊情况或补充说明</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>课程名称</th>
+                                                <th>作业标题</th>
+                                                <th>截止日期</th>
+                                                <th>状态</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="hw in homeworkList" :key="hw.id">
+                                                <td>{{ hw.course_name }}</td>
+                                                <td>{{ hw.title }}</td>
+                                                <td>{{ formatDate(hw.deadline) }}</td>
+                                                <td>
+                                                    <span :class="getStatusClass(hw)">
+                                                        {{ getStatusText(hw) }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-primary" @click="selectHomework(hw)">提交作业</button>
+                                                    <button class="btn btn-sm btn-info" @click="viewHomeworkDetails(hw)">查看详情</button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 作业提交表单视图 -->
+            <div v-else>
+                <div class="row">
+                    <div class="col-md-8 offset-md-2">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">提交作业</h5>
+                                <button type="button" class="btn btn-outline-secondary" @click="backToHomeworkList">
+                                    <i class="bi bi-arrow-left"></i> 返回作业列表
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <h6>作业信息：</h6>
+                                    <p><strong>课程名称：</strong>{{ selectedHomework.course_name }}</p>
+                                    <p><strong>作业标题：</strong>{{ selectedHomework.title }}</p>
+                                    <p><strong>截止日期：</strong>{{ formatDate(selectedHomework.deadline) }}</p>
+                                    <p><strong>作业要求：</strong>{{ selectedHomework.description }}</p>
+                                </div>
+                                
+                                <form @submit.prevent="submitHomework">
+                                    <div class="mb-3">
+                                        <label for="studentName" class="form-label">学生姓名</label>
+                                        <input type="text" class="form-control" id="studentName" v-model="studentName" required>
+                                        <small class="text-danger">请确保姓名与学号匹配，否则将无法提交作业</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="studentId" class="form-label">学号</label>
+                                        <input type="text" class="form-control" id="studentId" v-model="studentId" required>
+                                        <small class="text-danger">请确保学号与姓名匹配，否则将无法提交作业</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="file" class="form-label">选择文件</label>
+                                        <input type="file" class="form-control" id="file" @change="handleFileChange" multiple required>
+                                        <small class="text-muted">支持的文件格式：PDF, DOC, DOCX, PPT, PPTX, TXT, JPG, PNG, IPYNB, CSV</small>
+                                        <small class="text-muted d-block">可以按住Ctrl键选择多个文件</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="description" class="form-label">补充说明</label>
+                                        <textarea class="form-control" id="description" v-model="description" rows="3" placeholder="如有特殊情况或补充说明，请在此处注明"></textarea>
+                                    </div>
+                                    <div class="d-flex justify-content-end">
+                                        <button type="submit" class="btn btn-primary">提交作业</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 作业详情模态框 -->
+        <div class="modal fade" id="homeworkDetailsModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">作业详情</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" v-if="selectedHomework">
+                        <h6>课程名称</h6>
+                        <p>{{ selectedHomework.course_name }}</p>
+                        
+                        <h6>作业标题</h6>
+                        <p>{{ selectedHomework.title }}</p>
+                        
+                        <h6>截止日期</h6>
+                        <p>{{ formatDate(selectedHomework.deadline) }}</p>
+                        
+                        <h6>作业要求</h6>
+                        <p>{{ selectedHomework.description }}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                        <button type="button" class="btn btn-primary" @click="selectHomework(selectedHomework)">提交作业</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/bootstrap.bundle.min.js"></script>
+    <script src="../js/app.js"></script>
+</body>
+</html> 
