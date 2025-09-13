@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据03班课堂作业管理系统 - 管理员界面</title>
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/styles.css" rel="stylesheet">
+    <script src="../js/vue.min.js"></script>
+    <script src="../js/axios.min.js"></script>
+</head>
+<body>
+    <div id="adminApp">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="#">数据03班课堂作业管理系统</a>
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="select.html">返回学生界面</a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container mt-4">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="list-group">
+                        <a href="#" class="list-group-item list-group-item-action" :class="{ active: currentView === 'students' }" @click="currentView = 'students'">班级成员管理</a>
+                        <a href="#" class="list-group-item list-group-item-action" :class="{ active: currentView === 'homework' }" @click="currentView = 'homework'">作业管理</a>
+                        <a href="#" class="list-group-item list-group-item-action" :class="{ active: currentView === 'submissions' }" @click="currentView = 'submissions'">作业提交情况</a>
+                        <a href="#" class="list-group-item list-group-item-action" :class="{ active: currentView === 'leave' }" @click="currentView = 'leave'">请假管理</a>
+                        <button class="list-group-item list-group-item-action btn btn-danger" @click="clearCache">清除缓存</button>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <!-- 班级成员管理 -->
+                    <div v-if="currentView === 'students'" class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">班级成员管理</h5>
+                            <button class="btn btn-primary mb-3" @click="showAddStudentModal = true">添加学生</button>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>学号</th>
+                                            <th>姓名</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="student in students" :key="student.id">
+                                            <td>{{ student.studentId }}</td>
+                                            <td>{{ student.name }}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-warning me-2" @click="editStudent(student)">编辑</button>
+                                                <button class="btn btn-sm btn-danger" @click="deleteStudent(student)">删除</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 作业管理 -->
+                    <div v-if="currentView === 'homework'" class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">作业管理</h5>
+                            <button class="btn btn-primary mb-3" @click="showAddHomeworkModal = true">发布新作业</button>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>课程名称</th>
+                                            <th>作业标题</th>
+                                            <th>截止日期</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="hw in homeworkList" :key="hw.id">
+                                            <td>{{ hw.course_name }}</td>
+                                            <td>{{ hw.title }}</td>
+                                            <td>{{ hw.deadline }}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-info me-2" @click="viewHomeworkDetails(hw)">查看详情</button>
+                                                <button class="btn btn-sm btn-warning me-2" @click="editHomework(hw)">编辑</button>
+                                                <button class="btn btn-sm btn-danger" @click="deleteHomework(hw)">删除</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 作业提交情况 -->
+                    <div v-if="currentView === 'submissions'" class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">作业提交状态</h5>
+                            <div class="d-flex gap-2">
+                                <select class="form-select" v-model="selectedCourse" @change="loadSubmissions">
+                                <option value="">选择课程</option>
+                                <option v-for="course in courses" :value="course">{{ course }}</option>
+                            </select>
+                            <button class="btn btn-warning" @click="toggleShowMissing">
+                                {{ showMissing ? '显示已提交' : '显示未提交' }}
+                            </button>
+                        </div>
+                    </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>作业标题</th>
+                                            <th>学生姓名</th>
+                                            <th>学号</th>
+                                            <th>提交时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="submission in submissions">
+                                            <td>{{ submission.title }}</td>
+                                            <td>{{ submission.student_name || submission.student_name }}</td>
+                                            <td>{{ submission.student_id }}</td>
+                                            <td>
+                                                {{ showMissing ? '未提交' : submission.submit_time }}
+                                                <span v-if="showMissing" class="text-danger">
+                                                    (截止时间：{{ submission.deadline }})
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <template v-if="!showMissing">
+                                                    <button class="btn btn-sm btn-primary me-2" 
+                                                            @click="downloadSubmission(submission)">下载</button>
+                                                    <button class="btn btn-sm btn-success" 
+                                                            @click="downloadAllSubmissions(submission.homework_id)">统一下载</button>
+                                                </template>
+                                                <template v-else>
+                                                    <button class="btn btn-sm btn-outline-warning"
+                                                            @click="sendReminder(submission)">发送提醒</button>
+                                                </template>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 请假管理 -->
+                    <div v-if="currentView === 'leave'" class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">请假管理</h5>
+                            <div class="mb-3">
+                                <label class="form-label">选择日期</label>
+                                <input type="date" class="form-control" v-model="selectedDate">
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>学号</th>
+                                            <th>姓名</th>
+                                            <th>请假类型</th>
+                                            <th>请假原因</th>
+                                            <th>申请时间</th>
+                                            <th>状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="leave in leaveList" :key="leave.id">
+                                            <td>{{ leave.studentId }}</td>
+                                            <td>{{ leave.studentName }}</td>
+                                            <td>{{ leave.leaveType }}</td>
+                                            <td>{{ leave.reason }}</td>
+                                            <td>{{ leave.submitTime }}</td>
+                                            <td>
+                                                <span :class="getLeaveStatusClass(leave.status)">
+                                                    {{ leave.status }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-success me-2" @click="approveLeave(leave)" v-if="leave.status === '待审核'">批准</button>
+                                                <button class="btn btn-sm btn-danger" @click="rejectLeave(leave)" v-if="leave.status === '待审核'">拒绝</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 添加学生模态框 -->
+        <div class="modal fade" id="addStudentModal" tabindex="-1" :class="{ show: showAddStudentModal }" :style="{ display: showAddStudentModal ? 'block' : 'none' }">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">添加学生</h5>
+                        <button type="button" class="btn-close" @click="showAddStudentModal = false"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form @submit.prevent="submitStudent">
+                            <div class="mb-3">
+                                <label class="form-label">学号</label>
+                                <input type="text" class="form-control" v-model="newStudent.studentId" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">姓名</label>
+                                <input type="text" class="form-control" v-model="newStudent.name" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">保存</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 发布作业模态框 -->
+        <div class="modal fade" id="addHomeworkModal" tabindex="-1" :class="{ show: showAddHomeworkModal }" :style="{ display: showAddHomeworkModal ? 'block' : 'none' }">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">发布新作业</h5>
+                        <button type="button" class="btn-close" @click="showAddHomeworkModal = false"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form @submit.prevent="submitHomework">
+                            <div class="mb-3">
+                                <label class="form-label">课程名称</label>
+                                <input type="text" class="form-control" v-model="newHomework.courseName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">作业标题</label>
+                                <input type="text" class="form-control" v-model="newHomework.title" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">截止日期</label>
+                                <input type="datetime-local" class="form-control" v-model="newHomework.deadline" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="requirements" class="form-label">作业要求</label>
+                                <textarea class="form-control" id="requirements" v-model="newHomework.requirements" rows="3" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="fileNameFormats" class="form-label">文件命名格式</label>
+                                <div v-for="(format, index) in newHomework.fileNameFormats" :key="index" class="input-group mb-2">
+                                    <input type="text" class="form-control" v-model="newHomework.fileNameFormats[index]" required>
+                                    <button class="btn btn-outline-danger" type="button" @click="removeFileNameFormat(index)" v-if="newHomework.fileNameFormats.length > 1">删除</button>
+                                </div>
+                                <button class="btn btn-outline-primary btn-sm" type="button" @click="addFileNameFormat()">添加格式</button>
+                                <small class="text-muted d-block mt-2">
+                                    支持的占位符：<br>
+                                    {学号} - 学生学号<br>
+                                    {姓名} - 学生姓名<br>
+                                    {作业编号} - 作业编号<br>
+                                    例如：<br>
+                                    - 实验报告_{学号}_{姓名}.docx<br>
+                                    - {姓名}_第{作业编号}次作业.pdf<br>
+                                    - {学号}_实验{作业编号}.zip
+                                </small>
+                            </div>
+                            <button type="submit" class="btn btn-primary">发布</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 编辑作业模态框 -->
+        <div class="modal fade" id="editHomeworkModal" tabindex="-1" :class="{ show: showEditHomeworkModal }" :style="{ display: showEditHomeworkModal ? 'block' : 'none' }">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">编辑作业</h5>
+                        <button type="button" class="btn-close" @click="showEditHomeworkModal = false"></button>
+                    </div>
+                    <div class="modal-body" v-if="editingHomework">
+                        <form @submit.prevent="updateHomework">
+                            <div class="mb-3">
+                                <label class="form-label">课程名称</label>
+                                <input type="text" class="form-control" v-model="editingHomework.courseName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">作业标题</label>
+                                <input type="text" class="form-control" v-model="editingHomework.title" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">截止日期</label>
+                                <input type="datetime-local" class="form-control" v-model="editingHomework.deadline" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">作业要求</label>
+                                <textarea class="form-control" v-model="editingHomework.requirements" rows="3" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">文件命名格式</label>
+                                <div v-for="(format, index) in editingHomework.fileNameFormats" :key="index" class="input-group mb-2">
+                                    <input type="text" class="form-control" v-model="editingHomework.fileNameFormats[index]" required>
+                                    <button class="btn btn-outline-danger" type="button" @click="removeFileNameFormat(index, editingHomework)" v-if="editingHomework.fileNameFormats.length > 1">删除</button>
+                                </div>
+                                <button class="btn btn-outline-primary btn-sm" type="button" @click="addFileNameFormat(editingHomework)">添加格式</button>
+                                <small class="text-muted d-block mt-2">
+                                    支持的占位符：<br>
+                                    {学号} - 学生学号<br>
+                                    {姓名} - 学生姓名<br>
+                                    {作业编号} - 作业编号<br>
+                                    例如：<br>
+                                    - 实验报告_{学号}_{姓名}.docx<br>
+                                    - {姓名}_第{作业编号}次作业.pdf<br>
+                                    - {学号}_实验{作业编号}.zip
+                                </small>
+                            </div>
+                            <button type="submit" class="btn btn-primary">保存修改</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 编辑学生模态框 -->
+        <div class="modal fade" id="editStudentModal" tabindex="-1" :class="{ show: showEditStudentModal }" :style="{ display: showEditStudentModal ? 'block' : 'none' }">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">编辑学生信息</h5>
+                        <button type="button" class="btn-close" @click="showEditStudentModal = false"></button>
+                    </div>
+                    <div class="modal-body" v-if="editingStudent">
+                        <form @submit.prevent="updateStudent">
+                            <div class="mb-3">
+                                <label class="form-label">学号</label>
+                                <input type="text" class="form-control" v-model="editingStudent.studentId" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">姓名</label>
+                                <input type="text" class="form-control" v-model="editingStudent.name" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">保存修改</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/bootstrap.bundle.min.js"></script>
+    <script src="../js/admin.js"></script>
+</body>
+</html> 

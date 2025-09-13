@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员登录 - 课堂作业上传系统</title>
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/styles.css" rel="stylesheet">
+    <script src="../js/vue.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="#">课堂作业上传系统 - 管理员登录</a>
+            </div>
+        </nav>
+
+        <div class="container mt-5">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title text-center mb-4">管理员登录</h5>
+                            <form @submit.prevent="login">
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">管理员密码</label>
+                                    <input type="password" class="form-control" id="password" v-model="password" required>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">登录</button>
+                                </div>
+                                <div v-if="error" class="alert alert-danger mt-3">
+                                    {{ error }}
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                password: '',
+                error: ''
+            },
+            methods: {
+                login() {
+                    if (this.password === 'xiaoguo') {
+                        // 登录成功，跳转到管理员页面
+                        window.location.href = 'admin.html';
+                    } else {
+                        this.error = '密码错误，请重试';
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

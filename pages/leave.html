@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据03班晚自习请假系统</title>
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/styles.css" rel="stylesheet">
+    <script src="../js/vue.min.js"></script>
+    <script src="../js/axios.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="#">数据03班晚自习请假系统</a>
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="select.html">返回功能选择</a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container mt-4">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">晚自习请假申请</h5>
+                            <form @submit.prevent="submitLeave">
+                                <div class="mb-3">
+                                    <label for="studentName" class="form-label">学生姓名</label>
+                                    <input type="text" class="form-control" id="studentName" v-model="studentName" required>
+                                    <small class="text-danger">请确保姓名与学号匹配，否则将无法提交申请</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="studentId" class="form-label">学号</label>
+                                    <input type="text" class="form-control" id="studentId" v-model="studentId" required>
+                                    <small class="text-danger">请确保学号与姓名匹配，否则将无法提交申请</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="leaveType" class="form-label">请假类型</label>
+                                    <select class="form-select" id="leaveType" v-model="leaveType" required>
+                                        <option value="">请选择请假类型</option>
+                                        <option value="事假">事假</option>
+                                        <option value="病假">病假</option>
+                                        <option value="公假">公假</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="reason" class="form-label">请假原因</label>
+                                    <textarea class="form-control" id="reason" v-model="reason" rows="3" required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="leaveImages" class="form-label">假条图片（选填，可多选）</label>
+                                    <input type="file" class="form-control" id="leaveImages" @change="handleImageUpload" accept="image/*" multiple>
+                                    <small class="text-muted">支持jpg、png等常见图片格式，可同时选择多个文件</small>
+                                    <div v-if="leaveImages.length > 0" class="mt-2">
+                                        <div class="alert alert-info">
+                                            已选择 {{ leaveImages.length }} 个文件
+                                        </div>
+                                        <div v-for="(file, index) in leaveImages" :key="index" class="d-flex align-items-center mb-1">
+                                            <span class="me-2">{{ file.name }}</span>
+                                            <button type="button" class="btn btn-sm btn-danger" @click="removeImage(index)">删除</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">提交申请</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                studentName: '',
+                studentId: '',
+                leaveType: '',
+                reason: '',
+                leaveImages: [],
+                apiBaseUrl: 'http://5.181.225.107:26754'
+            },
+            methods: {
+                handleImageUpload(event) {
+                    // 将新选择的文件添加到数组中
+                    const newFiles = Array.from(event.target.files);
+                    this.leaveImages = [...this.leaveImages, ...newFiles];
+                    // 清空文件输入框，以便可以再次选择相同的文件
+                    event.target.value = '';
+                },
+                removeImage(index) {
+                    this.leaveImages.splice(index, 1);
+                },
+                async submitLeave() {
+                    try {
+                        // 创建FormData对象
+                        const formData = new FormData();
+                        formData.append('studentName', this.studentName);
+                        formData.append('studentId', this.studentId);
+                        formData.append('leaveType', this.leaveType);
+                        formData.append('reason', this.reason);
+                        
+                        // 添加所有图片文件
+                        this.leaveImages.forEach((file, index) => {
+                            formData.append('leaveImages', file);
+                        });
+
+                        const response = await axios.post(`${this.apiBaseUrl}/api/leave`, formData, {
+                            headers: {
+                                'Content-Type': 'multipart/form-data'
+                            }
+                        });
+                        
+                        if (response.data.success) {
+                            alert('请假申请提交成功');
+                            this.resetForm();
+                        } else {
+                            alert(response.data.message || '提交失败');
+                        }
+                    } catch (error) {
+                        console.error('提交请假申请失败:', error);
+                        alert(error.response?.data?.message || '提交失败，请检查学生信息是否正确');
+                    }
+                },
+                resetForm() {
+                    this.studentName = '';
+                    this.studentId = '';
+                    this.leaveType = '';
+                    this.reason = '';
+                    this.leaveImages = [];
+                    // 重置文件输入框
+                    document.getElementById('leaveImages').value = '';
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

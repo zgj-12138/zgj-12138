@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作业查询管理</title>
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/styles.css" rel="stylesheet">
+    <script src="../js/vue.min.js"></script>
+    <script src="../js/axios.min.js"></script>
+</head>
+<body>
+    <div id="queryApp">
+        <div class="container mt-5">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">作业查询管理</h5>
+                </div>
+                <div class="card-body">
+                    <!-- 查询表单 -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" v-model="queryParams.studentId" placeholder="学号">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" v-model="queryParams.studentName" placeholder="姓名">
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary w-100" @click="fetchSubmissions">查询</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 结果展示 -->
+                    <div v-if="filteredSubmissions.length" class="submission-list">
+                        <div v-for="sub in filteredSubmissions" :key="sub.id" class="submission-item mb-3 p-3 border rounded">
+                            <h6>{{ sub.courseName }} - {{ sub.homeworkTitle }}</h6>
+                            <p class="mb-1">提交时间：{{ sub.submit_time }}</p>
+                            <p class="mb-1">文件列表：{{ sub.filenames.join(', ') }}</p>
+                            <!-- 在.submission-item内添加按钮 -->
+                            <button class="btn btn-sm btn-warning mt-2" @click="handleResubmit(sub)">
+                                <i class="bi bi-arrow-repeat"></i> 重新提交
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div v-else class="text-center text-muted">
+                        暂无提交记录
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../js/bootstrap.bundle.min.js"></script>
+    <script src="../js/query.js"></script>
+</body>
+</html>
