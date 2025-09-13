@@ -1,0 +1,40 @@
+{
+  "homework": [
+    {
+      "id": 3,
+      "course_name": "Python—课件",
+      "title": "课件s11/s12",
+      "description": "提交课件s11/s12",
+      "deadline": "2025-05-22T23:30",
+      "fileNameFormats": [
+        "{学号}_{姓名}_s11.ipynb",
+        "{学号}_{姓名}_s12.ipynb"
+      ],
+      "status": "active"
+    },
+    {
+      "id": 4,
+      "course_name": "Python课件",
+      "title": "s13/14",
+      "description": "提交课件s13/14",
+      "deadline": "2025-05-29T23:30",
+      "fileNameFormats": [
+        "{学号}_{姓名}_s13.ipynb",
+        "{学号}_{姓名}_s14.ipynb"
+      ],
+      "status": "active"
+    },
+    {
+      "id": 5,
+      "course_name": "Python——15/16",
+      "title": "s15/16",
+      "description": "提交s15/16",
+      "deadline": "2025-06-08T23:47",
+      "fileNameFormats": [
+        "{学号}_{姓名}_s15.ipynb",
+        "{学号}_{姓名}_s16.ipynb"
+      ],
+      "status": "active"
+    }
+  ]
+}
